@@ -37,4 +37,9 @@ class Event extends Model
         return $this->description()->where('language', '=', $language)->first();
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'eventId', 'id');
+    }
+
 }
