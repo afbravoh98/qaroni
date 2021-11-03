@@ -32,10 +32,14 @@
                                     {{ $event->category->translation($lang)->name }}
                                 </th>
                                 <td>
-                                    {{ $event->capacity }}
+                                    {{ $event->capacity - $event->orders->sum('quantity') }} / {{ $event->capacity }}
                                 </td>
                                 <td>
                                     <div class="btn-group">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderModal-{{$event->id}}">
+                                            Reservar
+                                        </button>
+                                        @include('events.order', ['event' => $event])
                                         <a class="btn" href="/events/{{$event->slug}}/edit"> <i class="fa fa-pencil"></i></a>
                                         <form method="POST" action="{{route('events.delete',$event->slug)}}">
                                             @csrf

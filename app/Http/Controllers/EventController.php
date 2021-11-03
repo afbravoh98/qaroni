@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEventOrderRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Jobs\SendOrderNotification;
 use App\Models\Category;
 use App\Models\Event;
 use Illuminate\Contracts\Foundation\Application;
@@ -43,16 +45,6 @@ class EventController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param StoreEventRequest $request
@@ -83,19 +75,9 @@ class EventController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param Event $event
-     * @return Response
-     */
-    public function show(Event $event)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      *
+     * @param Request $request
      * @param $slug
      * @return Application|Factory|View
      */
@@ -160,5 +142,31 @@ class EventController extends Controller
 
         Alert::success('Éxito!', 'Evento Eliminado Correctamente');
         return redirect('events');
+    }
+
+    public function order(StoreEventOrderRequest $request, $slug): RedirectResponse
+    {
+        /**@var Event $event*/
+        $event = Event::query()->where('slug', $slug)->firstOrFail();
+        $data = $request->validated();
+
+        $available = $event->capacity - $event->orders->sum('quantity');
+
+        if ($data['quantity'] > $available) {
+            Alert::warning('Ups!', "Solamente quedan $available tickets disponibles");
+            return  redirect()->back();
+        }
+
+        $order = $event->orders()->create([
+            'buy_at' => now(),
+            'email' => $data['email'],
+            'quantity' => $data['quantity'],
+        ]);
+
+        dispatch(new SendOrderNotification($data['email'], $event, $order));
+
+        Alert::success('Éxito!', 'Evento reservado Correctamente');
+
+        return redirect()->back();
     }
 }

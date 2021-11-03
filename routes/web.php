@@ -25,6 +25,9 @@ Route::get('events/{slug}/edit', [EventController::class, 'edit'])->name('events
 Route::put('events/{slug}', [EventController::class, 'update'])->name('events.update');
 Route::delete('events/{slug}/delete', [EventController::class, 'destroy'])->name('events.delete');
 
+Route::post('events/order/{slug}', [EventController::class, 'order'])->name('events.order');
+
+
 
 Route::get('categories', [CategoryController::class, 'index'])->name('categories');
 Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
